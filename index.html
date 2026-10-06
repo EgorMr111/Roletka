@@ -140,7 +140,7 @@
             background: #fff;
         }
 
-        /* Скрытое секретное окно */
+        /* Приховане секретне модальне вікно */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -160,24 +160,52 @@
             border-radius: 20px;
             box-shadow: 0 20px 30px rgba(0,0,0,0.3);
             z-index: 101;
-            width: 88%;
-            max-width: 360px;
-            text-align: center;
+            width: 90%;
+            max-width: 380px;
+            text-align: left;
         }
 
         .modal h3 {
             margin-top: 0;
             color: #111827;
+            text-align: center;
         }
 
-        .modal select {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
+        .checkbox-group {
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 15px 0;
+            border: 1px solid #e5e7eb;
             border-radius: 10px;
-            border: 1px solid #d1d5db;
-            margin: 15px 0 20px 0;
+            padding: 10px;
             background: #f9fafb;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 5px;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+        }
+
+        .checkbox-item:last-child {
+            border-bottom: none;
+        }
+
+        .checkbox-item input {
+            margin-right: 12px;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
+            font-size: 15px;
+            cursor: pointer;
+            flex: 1;
+            user-select: none;
         }
 
         .modal-btn {
@@ -190,6 +218,7 @@
             border: none;
             border-radius: 12px;
             cursor: pointer;
+            margin-top: 10px;
         }
 
         .result-dialog {
@@ -237,16 +266,19 @@
         </div>
     </div>
 
-    <!-- Скрытое меню настройки -->
+    <!-- Приховане секретне модальне вікно -->
     <div class="modal-overlay" id="modalOverlay"></div>
 
     <div class="modal" id="secretModal">
-        <h3>🤫 Налаштування виграшу</h3>
-        <p style="font-size:13px; color:#6b7280; margin:0;">Обери варіант для наступного обертання:</p>
-        <select id="riggedSelect">
-            <option value="-1">🎲 Випадково (Чесна гра)</option>
-        </select>
-        <button class="modal-btn" id="saveSecretBtn">Готово</button>
+        <h3>🤫 Секретний порядок випадання</h3>
+        <p style="font-size:13px; color:#6b7280; margin:0; text-align:center;">Оберіть варіанти та встановіть черговість їх випадання (без повторів):</p>
+        
+        <div class="checkbox-group" id="checkboxGroup"></div>
+
+        <div style="font-size:12px; color:#4f46e5; text-align:center; font-weight:600;" id="sequenceStatus">Порядок: Не вибрано</div>
+
+        <button class="modal-btn" id="saveSecretBtn">Зберегти та закрити</button>
+        <button class="modal-btn" id="resetSecretBtn" style="background:#6b7280; margin-top:6px;">Скинути чергу</button>
     </div>
 
     <!-- Результат -->
@@ -264,8 +296,10 @@
         const mainTitle = document.getElementById('mainTitle');
         const secretModal = document.getElementById('secretModal');
         const modalOverlay = document.getElementById('modalOverlay');
-        const riggedSelect = document.getElementById('riggedSelect');
+        const checkboxGroup = document.getElementById('checkboxGroup');
+        const sequenceStatus = document.getElementById('sequenceStatus');
         const saveSecretBtn = document.getElementById('saveSecretBtn');
+        const resetSecretBtn = document.getElementById('resetSecretBtn');
         const resultDialog = document.getElementById('resultDialog');
         const resultText = document.getElementById('resultText');
         const closeResultBtn = document.getElementById('closeResultBtn');
@@ -274,31 +308,61 @@
         let currentAngle = 0;
         let isSpinning = false;
 
+        // Масив індексів обраних елементів за порядком
+        let riggedQueue = [];
+
         const colors = [
             '#ef4444', '#f97316', '#f59e0b', '#10b981', 
             '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'
         ];
 
         function getItems() {
-            return itemsInput.value.split('\n').map(i => i.trim()).filter(i => i.length > 0);
+            return itemsInput.value.split('
+').map(i => i.trim()).filter(i => i.length > 0);
         }
 
         function updateItems() {
             items = getItems();
-            updateRiggedOptions();
+            riggedQueue = riggedQueue.filter(idx => idx < items.length);
+            updateSecretUI();
             drawWheel();
         }
 
-        function updateRiggedOptions() {
-            const currentVal = riggedSelect.value;
-            riggedSelect.innerHTML = '<option value="-1">🎲 Випадково (Чесна гра)</option>';
+        function updateSecretUI() {
+            checkboxGroup.innerHTML = '';
             items.forEach((item, index) => {
-                const opt = document.createElement('option');
-                opt.value = index;
-                opt.textContent = `🎯 ${item}`;
-                riggedSelect.appendChild(opt);
+                const div = document.createElement('div');
+                div.className = 'checkbox-item';
+                
+                const qIndex = riggedQueue.indexOf(index);
+                const isChecked = qIndex !== -1;
+
+                div.innerHTML = `
+                    <input type="checkbox" id="chk_${index}" ${isChecked ? 'checked' : ''}>
+                    <label for="chk_${index}">${item} ${isChecked ? `<b>(#${qIndex + 1})</b>` : ''}</label>
+                `;
+
+                const checkbox = div.querySelector('input');
+                checkbox.addEventListener('change', () => {
+                    if (checkbox.checked) {
+                        if (!riggedQueue.includes(index)) {
+                            riggedQueue.push(index);
+                        }
+                    } else {
+                        riggedQueue = riggedQueue.filter(i => i !== index);
+                    }
+                    updateSecretUI();
+                });
+
+                checkboxGroup.appendChild(div);
             });
-            riggedSelect.value = currentVal < items.length ? currentVal : "-1";
+
+            if (riggedQueue.length > 0) {
+                const seqNames = riggedQueue.map(i => items[i]).join(' ➔ ');
+                sequenceStatus.innerHTML = `Заплановано (${riggedQueue.length}):<br>${seqNames}`;
+            } else {
+                sequenceStatus.innerHTML = 'Порядок: Випадково (Чесна гра)';
+            }
         }
 
         function drawWheel() {
@@ -350,11 +414,12 @@
             isSpinning = true;
             spinBtn.disabled = true;
 
-            const selectedRigged = parseInt(riggedSelect.value);
             let targetIndex;
 
-            if (selectedRigged >= 0 && selectedRigged < items.length) {
-                targetIndex = selectedRigged;
+            if (riggedQueue.length > 0) {
+                // Беремо перший варіант із черги і видаляємо його (щоб не повторювався)
+                targetIndex = riggedQueue.shift();
+                updateSecretUI();
             } else {
                 targetIndex = Math.floor(Math.random() * items.length);
             }
@@ -388,7 +453,6 @@
                     showResult(items[targetIndex]);
                     isSpinning = false;
                     spinBtn.disabled = false;
-                    riggedSelect.value = "-1";
                     return;
                 }
 
@@ -409,7 +473,7 @@
             resultDialog.style.display = 'block';
         }
 
-        // Тройной клик/тап по заголовку для вызова секретного окна
+        // Потрійний тап/клік по заголовку
         let tapCount = 0;
         let tapTimer = null;
 
@@ -429,6 +493,11 @@
         saveSecretBtn.onclick = () => {
             modalOverlay.style.display = 'none';
             secretModal.style.display = 'none';
+        };
+
+        resetSecretBtn.onclick = () => {
+            riggedQueue = [];
+            updateSecretUI();
         };
 
         closeResultBtn.onclick = () => {
