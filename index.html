@@ -1,4 +1,4 @@
-html_code = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
@@ -10,7 +10,6 @@ html_code = """<!DOCTYPE html>
             --card-bg: #ffffff;
             --text-color: #1f2937;
             --primary-color: #4f46e5;
-            --primary-hover: #4338ca;
             --accent-color: #ef4444;
         }
 
@@ -141,7 +140,7 @@ html_code = """<!DOCTYPE html>
             background: #fff;
         }
 
-        /* Приховане секретне модальне вікно */
+        /* Скрытое секретное окно */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -238,7 +237,7 @@ html_code = """<!DOCTYPE html>
         </div>
     </div>
 
-    <!-- Приховане меню налаштування -->
+    <!-- Скрытое меню настройки -->
     <div class="modal-overlay" id="modalOverlay"></div>
 
     <div class="modal" id="secretModal">
@@ -410,7 +409,7 @@ html_code = """<!DOCTYPE html>
             resultDialog.style.display = 'block';
         }
 
-        // Потрійний тап/клік для відкриття секретного меню
+        // Тройной клик/тап по заголовку для вызова секретного окна
         let tapCount = 0;
         let tapTimer = null;
 
@@ -457,7 +456,3 @@ html_code = """<!DOCTYPE html>
     </script>
 </body>
 </html>
-"""
-
-with open("wheel_mobile_clean.html", "w", encoding="utf-8") as f:
-    f.write(html_code)
