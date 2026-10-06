@@ -1,48 +1,463 @@
-<!doctype html>
+html_code = """<!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Lucky Wheel</title>
-<style>
-:root{color-scheme:light dark;--bg:#f5f6fa;--panel:#fff;--text:#151722;--muted:#707584;--border:#e3e5eb;--accent:#6c5ce7}
-@media(prefers-color-scheme:dark){:root{--bg:#11131a;--panel:#1a1d26;--text:#f4f5f8;--muted:#9ca2b2;--border:#303442}}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}
-#app{min-height:100vh;background:var(--bg);padding:28px 18px}.wrap{max-width:1080px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.brand{font-size:25px;font-weight:850}.sub{color:var(--muted);font-size:14px;margin-top:3px}.layout{display:grid;grid-template-columns:minmax(330px,1fr) 340px;gap:22px}.card{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:20px;box-shadow:0 10px 35px #0000000b}.wheelbox{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:650px}.wheelwrap{position:relative;width:min(560px,90vw);aspect-ratio:1}.wheel{width:100%;height:100%;border-radius:50%;transition:transform 4.2s cubic-bezier(.12,.72,.12,1);filter:drop-shadow(0 12px 18px #0002)}canvas{width:100%;height:100%;display:block}.pointer{position:absolute;z-index:3;top:-4px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;border-top:0;border-bottom:34px solid #ff4757;filter:drop-shadow(0 3px 3px #0004)}.spin{margin-top:25px;border:0;border-radius:12px;padding:15px 44px;font-size:17px;font-weight:800;background:var(--accent);color:#fff;cursor:pointer;box-shadow:0 8px 20px #6c5ce744}.spin:disabled{opacity:.6;cursor:wait}.result{min-height:29px;margin-top:14px;font-size:20px;font-weight:800;text-align:center}.result span{color:var(--accent)}h2{font-size:18px;margin:0 0 8px}.hint{color:var(--muted);font-size:13px;margin-bottom:12px}.row{display:flex;gap:8px;margin-bottom:10px}textarea{width:100%;height:380px;resize:vertical;border:1px solid var(--border);border-radius:12px;background:transparent;color:var(--text);padding:13px;font:inherit;line-height:1.55}button.small{border:1px solid var(--border);background:transparent;color:var(--text);border-radius:9px;padding:9px 12px;cursor:pointer}.controls{display:flex;gap:8px;flex-wrap:wrap}.check{display:flex;align-items:center;gap:8px;margin:13px 0;font-size:14px}.danger{color:#e74c3c}.note{font-size:12px;color:var(--muted);line-height:1.45;margin-top:12px}
-@media(max-width:800px){.layout{grid-template-columns:1fr}.wheelbox{min-height:auto}.wheelwrap{width:min(520px,92vw)}textarea{height:260px}}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Колесо Фортуни</title>
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-color: #1f2937;
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --accent-color: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            margin: 10px 0 20px 0;
+            font-size: 28px;
+            color: #111827;
+            text-align: center;
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: pointer;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .wheel-box {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 20px 15px;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            width: 100%;
+        }
+
+        .pointer {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 16px solid transparent;
+            border-right: 16px solid transparent;
+            border-top: 30px solid var(--accent-color);
+            z-index: 10;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+        }
+
+        canvas {
+            width: 100% !important;
+            max-width: 340px;
+            height: auto !important;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .spin-btn {
+            margin-top: 20px;
+            width: 80%;
+            max-width: 260px;
+            padding: 16px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            background: var(--primary-color);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        .spin-btn:active {
+            transform: scale(0.96);
+        }
+
+        .spin-btn:disabled {
+            background: #9ca3af;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .controls-box {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            width: 100%;
+        }
+
+        .controls-box h3 {
+            margin-top: 0;
+            font-size: 16px;
+            color: #4b5563;
+        }
+
+        textarea {
+            width: 100%;
+            height: 160px;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            resize: vertical;
+            font-size: 16px;
+            outline: none;
+            background: #f9fafb;
+        }
+
+        textarea:focus {
+            border-color: var(--primary-color);
+            background: #fff;
+        }
+
+        /* Приховане секретне модальне вікно */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 100;
+            backdrop-filter: blur(3px);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 20px 30px rgba(0,0,0,0.3);
+            z-index: 101;
+            width: 88%;
+            max-width: 360px;
+            text-align: center;
+        }
+
+        .modal h3 {
+            margin-top: 0;
+            color: #111827;
+        }
+
+        .modal select {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 10px;
+            border: 1px solid #d1d5db;
+            margin: 15px 0 20px 0;
+            background: #f9fafb;
+        }
+
+        .modal-btn {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        .result-dialog {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ffffff;
+            padding: 30px 25px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            text-align: center;
+            z-index: 101;
+            width: 85%;
+            max-width: 320px;
+        }
+
+        .result-dialog h2 {
+            margin: 10px 0 20px 0;
+            font-size: 26px;
+            color: var(--primary-color);
+            word-break: break-word;
+        }
+    </style>
 </head>
 <body>
-<div id="app"><div class="wrap">
-<header class="top"><div><div class="brand">🎡 Lucky Wheel</div><div class="sub">Колесо вибору — додай варіанти та крути</div></div></header>
-<div class="layout">
-<section class="card wheelbox">
-<div class="wheelwrap"><div class="pointer"></div><div class="wheel" id="wheel"><canvas id="canvas" width="700" height="700"></canvas></div></div>
-<button class="spin" id="spin">КРУТИТИ</button><div class="result" id="result">Переможець: <span>—</span></div>
-</section>
-<aside class="card"><h2>Варіанти</h2><div class="hint">Кожен рядок — окремий сектор.</div><textarea id="items">Pizza
-Burger
-Sushi
-Kebab
-Pasta
-Tacos
-Salad
-Dessert</textarea>
-<div class="controls"><button class="small" id="add">+ Додати</button><button class="small" id="shuffle">Перемішати</button><button class="small" id="clear">Очистити</button></div>
-<label class="check"><input type="checkbox" id="forced"> <b>Режим “Мій результат”</b></label>
-<div id="forcedBox" style="display:none"><div class="hint">Вибери, що має випасти.</div><select id="target" style="width:100%;padding:11px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text)"></select></div>
-<div class="note">У звичайному режимі результат випадковий. У режимі “Мій результат” колесо все одно анімується, але зупиняється на вибраному секторі.</div>
-</aside>
-</div></div></div>
-<script>
-const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d'),itemsEl=document.getElementById('items'),wheel=document.getElementById('wheel'),spin=document.getElementById('spin'),result=document.getElementById('result'),forced=document.getElementById('forced'),target=document.getElementById('target');
-let rotation=0,spinning=false;
-function items(){return itemsEl.value.split(/\n|,/).map(x=>x.trim()).filter(Boolean)}
-function colors(i,n){let h=(i*360/n+8)%360;return `hsl(${h},72%,58%)`}
-function draw(){let a=items(),n=a.length||1,c=canvas.width/2,r=320;ctx.clearRect(0,0,700,700);ctx.save();ctx.translate(c,c);ctx.rotate(-Math.PI/2);for(let i=0;i<n;i++){let s=2*Math.PI/n;ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,r,i*s,(i+1)*s);ctx.closePath();ctx.fillStyle=colors(i,n);ctx.fill();ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=3;ctx.stroke();let mid=(i+.5)*s;ctx.save();ctx.rotate(mid);ctx.textAlign='right';ctx.fillStyle='#fff';ctx.font=`800 ${Math.max(13,Math.min(24,270/n+9))}px system-ui`;let text=a[i].length>22?a[i].slice(0,21)+'…':a[i];ctx.fillText(text,r-18,7);ctx.restore()}ctx.restore();ctx.beginPath();ctx.arc(c,c,56,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle='#ddd';ctx.stroke();ctx.fillStyle='#222';ctx.font='800 23px system-ui';ctx.textAlign='center';ctx.fillText('★',c,c+8);updateTargets(a)}
-function updateTargets(a){let old=target.value;target.innerHTML='';a.forEach((x,i)=>{let o=document.createElement('option');o.value=i;o.textContent=x;target.appendChild(o)});if(a.length&&old<a.length)target.value=old}
-function chooseIndex(a){if(forced.checked)return Math.max(0,Math.min(a.length-1,+target.value||0));return Math.floor(Math.random()*a.length)}
-spin.onclick=()=>{let a=items();if(spinning||!a.length){if(!a.length)result.innerHTML='Додай хоча б один варіант';return}spinning=true;spin.disabled=true;let idx=chooseIndex(a),n=a.length,sector=360/n;let desired=-(idx*sector+sector/2);let current=((rotation%360)+360)%360;let delta=((desired-current+540)%360)-180;rotation+=360*(6+Math.floor(Math.random()*3))+delta;wheel.style.transform=`rotate(${rotation}deg)`;setTimeout(()=>{result.innerHTML=`Переможець: <span>${escapeHtml(a[idx])}</span>`;spinning=false;spin.disabled=false},4250)};
-forced.onchange=()=>{document.getElementById('forcedBox').style.display=forced.checked?'block':'none'};
-itemsEl.oninput=draw;document.getElementById('add').onclick=()=>{itemsEl.value+=(itemsEl.value?'\n':'')+'Новий варіант';draw()};document.getElementById('clear').onclick=()=>{itemsEl.value='';draw()};document.getElementById('shuffle').onclick=()=>{let a=items();for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}itemsEl.value=a.join('\n');draw()};function escapeHtml(s){return s.replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]))}draw();
-</script></body></html>
+
+    <h1 id="mainTitle">🎡 Колесо Фортуни</h1>
+
+    <div class="container">
+        <div class="wheel-box">
+            <div class="pointer"></div>
+            <canvas id="wheelCanvas" width="340" height="340"></canvas>
+            <button class="spin-btn" id="spinBtn">КРУТИТИ</button>
+        </div>
+
+        <div class="controls-box">
+            <h3>Варіанти:</h3>
+            <textarea id="itemsInput">Пиво 🍺
+Піца 🍕
+Кава ☕
+Суші 🍣
+Торт 🍰
+Морозиво 🍦</textarea>
+        </div>
+    </div>
+
+    <!-- Приховане меню налаштування -->
+    <div class="modal-overlay" id="modalOverlay"></div>
+
+    <div class="modal" id="secretModal">
+        <h3>🤫 Налаштування виграшу</h3>
+        <p style="font-size:13px; color:#6b7280; margin:0;">Обери варіант для наступного обертання:</p>
+        <select id="riggedSelect">
+            <option value="-1">🎲 Випадково (Чесна гра)</option>
+        </select>
+        <button class="modal-btn" id="saveSecretBtn">Готово</button>
+    </div>
+
+    <!-- Результат -->
+    <div class="result-dialog" id="resultDialog">
+        <p style="font-size:14px; color:#6b7280; margin:0;">Випало:</p>
+        <h2 id="resultText">---</h2>
+        <button class="modal-btn" id="closeResultBtn">Супер!</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const itemsInput = document.getElementById('itemsInput');
+        const spinBtn = document.getElementById('spinBtn');
+        const mainTitle = document.getElementById('mainTitle');
+        const secretModal = document.getElementById('secretModal');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const riggedSelect = document.getElementById('riggedSelect');
+        const saveSecretBtn = document.getElementById('saveSecretBtn');
+        const resultDialog = document.getElementById('resultDialog');
+        const resultText = document.getElementById('resultText');
+        const closeResultBtn = document.getElementById('closeResultBtn');
+
+        let items = [];
+        let currentAngle = 0;
+        let isSpinning = false;
+
+        const colors = [
+            '#ef4444', '#f97316', '#f59e0b', '#10b981', 
+            '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'
+        ];
+
+        function getItems() {
+            return itemsInput.value.split('\n').map(i => i.trim()).filter(i => i.length > 0);
+        }
+
+        function updateItems() {
+            items = getItems();
+            updateRiggedOptions();
+            drawWheel();
+        }
+
+        function updateRiggedOptions() {
+            const currentVal = riggedSelect.value;
+            riggedSelect.innerHTML = '<option value="-1">🎲 Випадково (Чесна гра)</option>';
+            items.forEach((item, index) => {
+                const opt = document.createElement('option');
+                opt.value = index;
+                opt.textContent = `🎯 ${item}`;
+                riggedSelect.appendChild(opt);
+            });
+            riggedSelect.value = currentVal < items.length ? currentVal : "-1";
+        }
+
+        function drawWheel() {
+            const numItems = items.length;
+            const radius = canvas.width / 2;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (numItems === 0) return;
+
+            const sliceAngle = (2 * Math.PI) / numItems;
+
+            for (let i = 0; i < numItems; i++) {
+                const angle = currentAngle + i * sliceAngle;
+                
+                ctx.beginPath();
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.moveTo(radius, radius);
+                ctx.arc(radius, radius, radius - 4, angle, angle + sliceAngle);
+                ctx.closePath();
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#ffffff';
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(radius, radius);
+                ctx.rotate(angle + sliceAngle / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "bold 15px sans-serif";
+                ctx.shadowColor = "rgba(0,0,0,0.4)";
+                ctx.shadowBlur = 3;
+                ctx.fillText(items[i], radius - 20, 5);
+                ctx.restore();
+            }
+
+            ctx.beginPath();
+            ctx.arc(radius, radius, 20, 0, 2 * Math.PI);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.stroke();
+        }
+
+        function spin() {
+            if (isSpinning || items.length === 0) return;
+
+            isSpinning = true;
+            spinBtn.disabled = true;
+
+            const selectedRigged = parseInt(riggedSelect.value);
+            let targetIndex;
+
+            if (selectedRigged >= 0 && selectedRigged < items.length) {
+                targetIndex = selectedRigged;
+            } else {
+                targetIndex = Math.floor(Math.random() * items.length);
+            }
+
+            const numItems = items.length;
+            const sliceAngle = (2 * Math.PI) / numItems;
+
+            const targetSectorCenter = targetIndex * sliceAngle + sliceAngle / 2;
+            const extraRounds = 6 * 2 * Math.PI;
+            
+            const currentNormalized = currentAngle % (2 * Math.PI);
+            const targetAngleBase = (3 * Math.PI / 2) - targetSectorCenter;
+            
+            let rotationDelta = (targetAngleBase - currentNormalized) % (2 * Math.PI);
+            if (rotationDelta <= 0) {
+                rotationDelta += 2 * Math.PI;
+            }
+
+            const totalRotation = extraRounds + rotationDelta;
+            const startAngle = currentAngle;
+            const finalAngle = startAngle + totalRotation;
+
+            const duration = 4200;
+            const startTime = performance.now();
+
+            function animate(currentTime) {
+                const elapsed = currentTime - startTime;
+                if (elapsed >= duration) {
+                    currentAngle = finalAngle;
+                    drawWheel();
+                    showResult(items[targetIndex]);
+                    isSpinning = false;
+                    spinBtn.disabled = false;
+                    riggedSelect.value = "-1";
+                    return;
+                }
+
+                const progress = elapsed / duration;
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+
+                currentAngle = startAngle + totalRotation * easeOut;
+                drawWheel();
+                requestAnimationFrame(animate);
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        function showResult(winner) {
+            resultText.textContent = winner;
+            modalOverlay.style.display = 'block';
+            resultDialog.style.display = 'block';
+        }
+
+        // Потрійний тап/клік для відкриття секретного меню
+        let tapCount = 0;
+        let tapTimer = null;
+
+        mainTitle.addEventListener('click', () => {
+            tapCount++;
+            clearTimeout(tapTimer);
+            
+            if (tapCount >= 3) {
+                modalOverlay.style.display = 'block';
+                secretModal.style.display = 'block';
+                tapCount = 0;
+            } else {
+                tapTimer = setTimeout(() => { tapCount = 0; }, 500);
+            }
+        });
+
+        saveSecretBtn.onclick = () => {
+            modalOverlay.style.display = 'none';
+            secretModal.style.display = 'none';
+        };
+
+        closeResultBtn.onclick = () => {
+            modalOverlay.style.display = 'none';
+            resultDialog.style.display = 'none';
+        };
+
+        modalOverlay.onclick = () => {
+            modalOverlay.style.display = 'none';
+            secretModal.style.display = 'none';
+            resultDialog.style.display = 'none';
+        };
+
+        window.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.code === 'KeyX') {
+                modalOverlay.style.display = 'block';
+                secretModal.style.display = 'block';
+            }
+        });
+
+        itemsInput.addEventListener('input', updateItems);
+        spinBtn.addEventListener('click', spin);
+
+        updateItems();
+    </script>
+</body>
+</html>
+"""
+
+with open("wheel_mobile_clean.html", "w", encoding="utf-8") as f:
+    f.write(html_code)
